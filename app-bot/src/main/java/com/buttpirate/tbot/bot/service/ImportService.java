@@ -12,12 +12,13 @@ import org.telegram.telegrambots.meta.api.objects.EntityType;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.annotation.Resource;
+import java.util.Date;
 
 @Component
 public class ImportService {
-    @Resource ChannelDAO channelDAO;
-    @Resource TagDAO tagDAO;
-    @Resource PostDAO postDAO;
+    @Resource private ChannelDAO channelDAO;
+    @Resource private TagDAO tagDAO;
+    @Resource private PostDAO postDAO;
 
     public void handleImport(Update update) {
         ChannelModel channel = this.fetchChannel(update.getChannelPost().getChat());
@@ -25,7 +26,7 @@ public class ImportService {
         // Only if tags are present
         if (update.getChannelPost().getEntities() != null &&
             update.getChannelPost().getEntities().stream().anyMatch( entity -> entity.getType().equals(EntityType.HASHTAG) )) {
-            PostModel post = new PostModel(channel.getId(), update.getChannelPost().getMessageId());
+            PostModel post = new PostModel(channel.getId(), update.getChannelPost().getMessageId(), new Date());
             postDAO.insert(post);
 
             update.getChannelPost().getEntities().stream()
@@ -56,7 +57,7 @@ public class ImportService {
         TagModel tag = tagDAO.find(tagText);
 
         if (tag == null) {
-            tag = new TagModel(tagText);
+            tag = new TagModel(tagText, new Date());
             tagDAO.insert(tag);
         }
 

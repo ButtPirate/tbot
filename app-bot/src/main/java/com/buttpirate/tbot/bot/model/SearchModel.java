@@ -11,8 +11,11 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostModel extends AbstractModel {
-    private long channelId;
-    private Integer tgMessageId;
-    private Date importDate;
+public class SearchModel extends AbstractModel {
+    private Long tgChatId;
+    private Date startDate;
+    private int keyboardPageSize;
+    private int keyboardPage;
+    private Integer resultPageSize;
+    private Integer resultPage;
 }

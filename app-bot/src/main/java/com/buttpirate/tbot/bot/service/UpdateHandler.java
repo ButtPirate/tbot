@@ -22,14 +22,17 @@ public class UpdateHandler {
             if (update.hasChannelPost()) {
                 importService.handleImport(update);
 
-                // New message in chat with Bot
+            // New message in chat with Bot
             } else if (update.hasMessage()) {
                 chatId = update.getMessage().getChatId();
-                chatHandler.handleRequest(update);
+                chatHandler.handleMessage(update);
+
+            // Callback
             } else if (update.hasCallbackQuery()) {
                 chatId = update.getCallbackQuery().getMessage().getChatId();
                 callbackHandler.handleCallbackQuery(update);
             }
+
         } catch (CustomException e) {
             exceptionHandler.handleCustomException(e);
         } catch (Exception e) {

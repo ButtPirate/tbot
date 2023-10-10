@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractDAO {
-
 	protected final NamedParameterJdbcTemplate jdbcTemplate;
 
     public AbstractDAO(DataSource dataSource) {

@@ -21,10 +21,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @SuppressWarnings("SpringDependsOnUnresolvedBeanInspection")
@@ -36,7 +33,7 @@ public class ParserService {
     @Resource private ObjectMapper objectMapper;
     @Resource private TagDAO tagDAO;
     @Resource private PostDAO postDAO;
-
+// TODO : write docs & how to use. Mention that you need to add bot to admins
     @PostConstruct
     public void runImport() {
         if (parserConfig.filepaths == null || parserConfig.filepaths.length == 0) {
@@ -75,18 +72,20 @@ public class ParserService {
             }
         );
 
-        // TODO this is dumb but works on small sample size of 2 channels. check API docs
+        // This is dumb but works on small sample size of 2 channels. check API docs
         Long fixedChannelId = Long.parseLong("-100"+root.getId().toString());
 
         ChannelModel channel = new ChannelModel();
         channel.setTgChatId(fixedChannelId);
         channel.setTgTitle(root.getName());
+        channel.setImportDate(new Date());
         try { channelDAO.insert(channel); } catch (DuplicateKeyException e) { channel = channelDAO.find(fixedChannelId); log.info("Channel <"+channel+"> already saved..."); }
         ChannelModel finalChannel = channel;
 
         map.forEach((key, value) -> {
             TagModel tag = new TagModel();
             tag.setText(key.getText());
+            tag.setImportDate(new Date());
             try {
                 tagDAO.insert(tag);
             } catch (DuplicateKeyException e) {
@@ -100,6 +99,7 @@ public class ParserService {
                     PostModel post = new PostModel();
                     post.setChannelId(finalChannel.getId());
                     post.setTgMessageId(message.getId());
+                    post.setImportDate(new Date());
 
                     try {
                         postDAO.insert(post);

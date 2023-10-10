@@ -1,24 +1,25 @@
 package com.buttpirate.tbot.bot.service;
 
-import com.buttpirate.tbot.bot.CustomBot;
+import com.buttpirate.tbot.bot.DTO.SearchDTO;
 import com.buttpirate.tbot.bot.consts.BotCommands;
 import com.buttpirate.tbot.bot.exception.CustomException;
+import com.buttpirate.tbot.bot.model.SearchModel;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.EntityType;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.annotation.Resource;
-import java.util.Locale;
-import java.util.ResourceBundle;
+
+import static com.buttpirate.tbot.bot.service.TranslationService.getPhrase;
 
 @Component
 public class ChatHandler {
-    @Resource private PostSearchService postSearchService;
-    @Resource private CustomBot bot;
+    @Resource private SearchSessionService searchSessionService;
+    @Resource private TagKeyboardService tagKeyboardService;
+    @Resource private ChatService chatService;
 
-    public void handleRequest(Update update) throws Exception {
+    public void handleMessage(Update update) throws Exception {
         Message message = update.getMessage();
         // Handle /commands
         if (message.hasEntities() &&
@@ -29,11 +30,7 @@ public class ChatHandler {
             return;
         }
 
-        if (message.hasEntities() &&
-            message.getEntities().stream().anyMatch(entity -> entity.getType().equals(EntityType.HASHTAG))) {
-            postSearchService.searchStart(message);
-            return;
-        }
+        throw new CustomException("Unknown command. Use /start.", message.getChatId());
 
     }
 
@@ -41,27 +38,28 @@ public class ChatHandler {
         String command = message.getEntities().get(0).getText();
 
         switch (command) {
-            // Show available tags
+            // Search session start
             case (BotCommands.START):
-                this.sendStartMessage(message.getChatId());
+                this.handleStartCommand(message.getChatId());
                 return;
             default:
-                throw new CustomException("Unknown command " + command, message.getChatId());
+                throw new CustomException("Unknown command " + command+". Use /start.", message.getChatId());
             // Other commands here
         }
     }
 
-    private void sendStartMessage(long chatId) throws Exception {
-        Locale locale = Locale.ENGLISH; // TODO Get user's locale. From Telegram Message API?
-        ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
-        String messageText = bundle.getString("start-command-response");
+    public void handleStartCommand(Long chatId) throws Exception {
+        sendStartMessage(chatId);
 
-        SendMessage message = new SendMessage();
-        message.setText(messageText);
-        message.setChatId(chatId);
-        bot.execute(message);
+        SearchModel session = searchSessionService.cleanSession(chatId);
+        SearchDTO dto = new SearchDTO(session);
 
-        postSearchService.sendAvailableTags(chatId);
+        tagKeyboardService.sendKeyboard(dto);
 
     }
+
+    private void sendStartMessage(long chatId) throws Exception {
+        chatService.sendMessage(getPhrase("start-command-response"), chatId);
+    }
+
 }

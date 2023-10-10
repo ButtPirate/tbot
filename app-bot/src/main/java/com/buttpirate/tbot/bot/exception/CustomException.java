@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CustomException extends RuntimeException {
+public class CustomException extends Exception {
     private Long chatId;
 
     public CustomException(Exception e) {

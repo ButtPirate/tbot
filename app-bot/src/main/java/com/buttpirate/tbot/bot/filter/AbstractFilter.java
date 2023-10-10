@@ -4,8 +4,10 @@ import lombok.Data;
 
 @Data
 public abstract class AbstractFilter {
+    public static int DEFAULT_FIRST_FILTER_PAGE = 1;
+
     private int pageSize = 20;
-    private int page = 1;
+    private int page = DEFAULT_FIRST_FILTER_PAGE;
 
     public String offsetQueryPart() {
         String query = "\n";

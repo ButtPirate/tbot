@@ -1,4 +1,4 @@
-package com.buttpirate.tbot.bot.DTO;
+package com.buttpirate.tbot.bot.callbackdata;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

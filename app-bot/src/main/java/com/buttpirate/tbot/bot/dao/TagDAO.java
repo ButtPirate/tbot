@@ -1,6 +1,7 @@
 package com.buttpirate.tbot.bot.dao;
 
 import com.buttpirate.tbot.bot.model.PostModel;
+import com.buttpirate.tbot.bot.model.SearchModel;
 import com.buttpirate.tbot.bot.model.TagModel;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -10,6 +11,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -84,6 +87,30 @@ public class TagDAO extends AbstractDAO {
     @Cacheable(cacheNames = "tags")
     public TagModel get(long id) {
         return super.get(id);
+    }
+
+    public List<TagModel> findToDate(Date date) {
+        String query = "" +
+                "SELECT *\n" +
+                "FROM tags\n" +
+                "WHERE import_date <= :importDate";
+
+        Map<String, Object> params = map("importDate", date);
+
+        return jdbcTemplate.query(query, params, this.getRowMapper());
+    }
+
+    public List<TagModel> find(SearchModel search) {
+        String query = "" +
+                "SELECT tags.*\n" +
+                "FROM tags\n" +
+                "JOIN search_tag_link ON tags.id = search_tag_link.tag_id\n" +
+                "WHERE search_tag_link.search_id = :searchId";
+
+        Map<String, Object> params = map("searchId", search.getId());
+
+        return jdbcTemplate.query(query, params, this.getRowMapper());
+
     }
 
 }

@@ -75,28 +75,34 @@ public class PostDAO extends AbstractDAO {
                 "WITH inner_posts AS (\n" +
                 "    SELECT link.post_id, COUNT(link.post_id) AS relevancy\n" +
                 "    FROM posts\n" +
-                "             JOIN post_tag_link link on posts.id = link.post_id\n" +
+                "    JOIN post_tag_link link ON posts.id = link.post_id\n" +
+                "    JOIN channels inner_channels ON posts.channel_id = inner_channels.id\n" +
                 "    WHERE link.tag_id IN (:tagIds)\n" +
+                "    AND inner_channels.import_date <= :importDate\n" +
+                "    AND posts.import_date <= :importDate\n" +
                 "    GROUP BY link.post_id\n" +
                 "    ORDER BY relevancy DESC\n" +
                 ")\n" +
-                "SELECT outer_posts.*, channels.*\n" +
+                "SELECT outer_posts.*, outer_channels.*\n" +
                 "FROM posts outer_posts\n" +
-                "JOIN channels on outer_posts.channel_id = channels.id\n" +
+                "JOIN channels outer_channels on outer_posts.channel_id = outer_channels.id\n" +
                 "JOIN inner_posts ON inner_posts.post_id = outer_posts.id\n" +
-                "ORDER BY inner_posts.relevancy DESC\n" +
+                "ORDER BY inner_posts.relevancy DESC" +
                 filter.offsetQueryPart();
 
         String countQuery = "" +
                 "SELECT COUNT(DISTINCT post_id)\n" +
                 "FROM posts\n" +
                 "JOIN post_tag_link link on posts.id = link.post_id\n" +
-                "WHERE link.tag_id IN (:tagIds)";
+                "JOIN channels ON posts.channel_id = channels.id\n" +
+                "WHERE link.tag_id IN (:tagIds)\n" +
+                "AND channels.import_date <= :importDate\n" +
+                "AND posts.import_date <= :importDate";
 
         List<Long> tagIds = filter.getTags().stream()
                 .map(AbstractModel::getId)
                 .collect(Collectors.toList());
-        Map<String, Object> params = map("tagIds", tagIds);
+        Map<String, Object> params = map("tagIds", tagIds, "importDate", filter.getStartDate());
 
         List<PostDTO> items = jdbcTemplate.query(mainQuery, params, POST_DTO_EXTRACTOR);
 
